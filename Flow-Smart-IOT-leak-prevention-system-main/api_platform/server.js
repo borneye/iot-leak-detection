@@ -1,4 +1,23 @@
 // Get .env data
+// 1. Load environment variables FIRST
+require('dotenv').config({ path: `${__dirname}/.env` }); // Explicit path
+
+// 2. Debug log to verify loading
+console.log('MONGODB_URI:', process.env.MONGODB_URI);
+
+// 3. Configure Mongoose BEFORE connecting
+const mongoose = require('mongoose');
+mongoose.set('strictQuery', false); // Silences the warning
+
+// 4. Connect with error handling
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iot_leak_db')
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => {
+    console.error('❌ MongoDB Connection Error:', err.message);
+    process.exit(1);
+  });
+
+// 5. Rest of your server code...
 // Load environment variables FIRST
 require('dotenv').config();
 console.log('Environment:', process.env.MONGODB_URI); // Debug line

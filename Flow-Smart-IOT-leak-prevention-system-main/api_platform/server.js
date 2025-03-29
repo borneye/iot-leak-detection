@@ -1,9 +1,22 @@
 // Get .env data
+// Load environment variables FIRST
+require('dotenv').config();
+console.log('Environment:', process.env.MONGODB_URI); // Debug line
+
+// Fix Mongoose warning
+const mongoose = require('mongoose');
+mongoose.set('strictQuery', false);
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.log('Connection Error:', err.message));
 require('dotenv').config(); // This must be FIRST
 console.log('MongoDB URI:', process.env.MONGODB_URI); // Debug line
 
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false); // Fixes the warning
+
 require("dotenv").config();
 const mongoose = require("mongoose");
 const express = require("express");

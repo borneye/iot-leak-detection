@@ -1,4 +1,9 @@
 // Get .env data
+require('dotenv').config(); // This must be FIRST
+console.log('MongoDB URI:', process.env.MONGODB_URI); // Debug line
+
+const mongoose = require('mongoose');
+mongoose.set('strictQuery', false); // Fixes the warning
 require("dotenv").config();
 const mongoose = require("mongoose");
 const express = require("express");

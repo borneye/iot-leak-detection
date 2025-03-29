@@ -54,4 +54,63 @@ app.listen(PORT, () => {
   console.log(`🌐 Accepting requests from: ${process.env.FRONTEND_URL || 'http://localhost:5174'}`);
 });
 EOF
-                                 
+cat >> server.js << 'EOF'
+
+// ======================
+// API ENDPOINTS
+// ======================
+
+// Health check endpoint
+app.get('/', (req, res) => res.send('IoT Leak Detection API - Operational'));
+
+// POST endpoint for IoT devices to submit data
+app.post('/api/sensor-data', async (req, res) => {
+  try {
+    // Validate required fields
+    if (!req.body.sensorId || !req.body.location || !req.body.pressure) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Create new leak data record
+    const leakData = new LeakData({
+      sensorId: req.body.sensorId,
+      location: req.body.location,
+      pressure: req.body.pressure,
+      isLeaking: req.body.pressure > 3.5, // 3.5 bar = leak threshold
+      timestamp: new Date()
+    });
+
+    await leakData.save();
+    res.status(201).json(leakData);
+    
+  } catch (err) {
+    console.error('Error saving sensor data:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET endpoint for frontend to retrieve data
+app.get('/api/sensor-data', async (req, res) => {
+  try {
+    const data = await LeakData.find()
+      .sort({ timestamp: -1 }) // Newest first
+      .limit(100); // Limit to 100 most recent readings
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching sensor data:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ======================
+// SERVER STARTUP
+// ======================
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`\n🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Endpoints:`);
+  console.log(`   - POST /api/sensor-data - For IoT devices to submit data`);
+  console.log(`   - GET  /api/sensor-data - For frontend to retrieve data`);
+  console.log(`🔒 Allowed origins: ${process.env.FRONTEND_URL || 'http://localhost:5174'}\n`);
+});
+EOF                                 

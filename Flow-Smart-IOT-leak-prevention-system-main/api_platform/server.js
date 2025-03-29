@@ -113,4 +113,102 @@ app.listen(PORT, () => {
   console.log(`   - GET  /api/sensor-data - For frontend to retrieve data`);
   console.log(`🔒 Allowed origins: ${process.env.FRONTEND_URL || 'http://localhost:5174'}\n`);
 });
-EOF                                 
+EOF 
+cat >> server.js << 'EOF'
+
+// ======================
+// API ENDPOINTS
+// ======================
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'operational',
+    message: 'IoT Leak Detection API',
+    endpoints: {
+      submitData: 'POST /api/sensor-data',
+      getData: 'GET /api/sensor-data'
+    }
+  });
+});
+
+// POST endpoint for IoT devices
+app.post('/api/sensor-data', async (req, res) => {
+  try {
+    // Input validation
+    if (!req.body.sensorId || !req.body.location || typeof req.body.pressure !== 'number') {
+      return res.status(400).json({ 
+        error: 'Invalid input',
+        required: ['sensorId (string)', 'location (string)', 'pressure (number)']
+      });
+    }
+
+    // Create and save new reading
+    const newReading = new LeakData({
+      sensorId: req.body.sensorId,
+      location: req.body.location,
+      pressure: req.body.pressure,
+      isLeaking: req.body.pressure > 3.5, // 3.5 bar threshold
+      timestamp: new Date()
+    });
+
+    await newReading.save();
+    
+    // Return the saved document
+    res.status(201).json({
+      message: 'Data saved successfully',
+      data: newReading
+    });
+
+  } catch (err) {
+    console.error('Error saving sensor data:', err);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: err.message 
+    });
+  }
+});
+
+// GET endpoint for frontend
+app.get('/api/sensor-data', async (req, res) => {
+  try {
+    // Get last 100 readings, newest first
+    const readings = await LeakData.find()
+      .sort({ timestamp: -1 })
+      .limit(100);
+      
+    res.json({
+      count: readings.length,
+      data: readings
+    });
+  } catch (err) {
+    console.error('Error fetching sensor data:', err);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: err.message 
+    });
+  }
+});
+
+// ======================
+// SERVER STARTUP
+// ======================
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`
+  ███████╗██╗      ██████╗ ██╗    ██╗
+  ██╔════╝██║     ██╔═══██╗██║    ██║
+  █████╗  ██║     ██║   ██║██║ █╗ ██║
+  ██╔══╝  ██║     ██║   ██║██║███╗██║
+  ██║     ███████╗╚██████╔╝╚███╔███╔╝
+  ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝ 
+  
+  🚀 Server running on port ${PORT}
+  🌐 Allowed Origin: ${process.env.FRONTEND_URL || 'http://localhost:5174'}
+  
+  📊 Available Endpoints:
+  POST /api/sensor-data - Submit sensor readings
+  GET  /api/sensor-data - Retrieve sensor data
+  `);
+});
+EOF

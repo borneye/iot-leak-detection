@@ -1,12 +1,16 @@
 cat > server.js << 'EOF'
 require('dotenv').config();
+require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iot_leak_db')
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => console.log('❌ Connection Error:', err.message));
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iot_leak_db', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('✅ MongoDB Connected'))
+.catch(err => console.log('❌ Connection Error:', err.message));
 
 // Express server
 const app = express();

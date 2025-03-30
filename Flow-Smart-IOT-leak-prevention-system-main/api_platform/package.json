@@ -14,7 +14,7 @@ cat << 'EOF' > package.json
     "leak detection",
     "water monitoring"
   ],
-  "author": "Your Name",
+  "author": "bonface",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",

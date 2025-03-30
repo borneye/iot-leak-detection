@@ -1,5 +1,7 @@
 npm pkg set scripts.start="node server.js"
-npm pkg set scripts.dev="nodemon server.js"
+npm pkg set scripts.dev="nodemon --watch . --ext js,json --exec node server.js"
+npm pkg set scripts.lint="eslint ."
+npm pkg set scripts.test="jest"
 "scripts": {
   "start": "node server.js",
   "dev": "nodemon server.js",

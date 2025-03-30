@@ -212,3 +212,78 @@ app.listen(PORT, () => {
   `);
 });
 EOF
+cat >> server.js << 'EOF'
+
+// ======================
+// API ENDPOINTS
+// ======================
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'operational',
+    message: 'IoT Leak Detection API',
+    endpoints: {
+      submitData: 'POST /api/sensor-data',
+      getData: 'GET /api/sensor-data'
+    }
+  });
+});
+
+// Handle sensor data submissions
+app.post('/api/sensor-data', async (req, res) => {
+  try {
+    // Validate required fields
+    if (!req.body.sensorId || !req.body.location || !req.body.pressure) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        required: ['sensorId', 'location', 'pressure']
+      });
+    }
+
+    // Create new reading with leak detection
+    const newReading = new LeakData({
+      sensorId: req.body.sensorId,
+      location: req.body.location,
+      pressure: parseFloat(req.body.pressure),
+      isLeaking: parseFloat(req.body.pressure) > 3.5, // 3.5 bar threshold
+      timestamp: new Date()
+    });
+
+    await newReading.save();
+    res.status(201).json(newReading);
+
+  } catch (err) {
+    console.error('Error saving sensor data:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Retrieve sensor data
+app.get('/api/sensor-data', async (req, res) => {
+  try {
+    const data = await LeakData.find()
+      .sort({ timestamp: -1 }) // Newest first
+      .limit(100); // Limit to 100 most recent readings
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching sensor data:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ======================
+// START THE SERVER
+// ======================
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`
+  🚀 Server running on port ${PORT}
+  --------------------------------
+  🌐 HTTP Endpoints:
+  POST /api/sensor-data - Submit sensor data
+  GET  /api/sensor-data - Retrieve sensor data
+  GET  /               - API status check
+  `);
+});
+EOF

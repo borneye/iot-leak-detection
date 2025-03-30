@@ -1,0 +1,132 @@
+# swagger.yaml
+openapi: 3.0.0
+info:
+  title: IoT Leak Detection API
+  version: 1.0.0
+  description: |
+    API for monitoring water pressure sensors and detecting pipe leaks.
+    Includes real-time alerts and historical data access.
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://your-production-url.com
+    description: Production server
+
+tags:
+  - name: Sensors
+    description: Sensor data operations
+  - name: Alerts
+    description: Leak detection alerts
+
+paths:
+  /:
+    get:
+      tags: []
+      summary: API Health Check
+      description: Returns API status information
+      responses:
+        200:
+          description: API is operational
+          content:
+            application/json:
+              example:
+                status: "operational"
+                message: "IoT Leak Detection API"
+
+  /api/sensor-data:
+    post:
+      tags: ["Sensors"]
+      summary: Submit sensor reading
+      description: Submit pressure data from IoT sensors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sensorId, location, pressure]
+              properties:
+                sensorId:
+                  type: string
+                  example: "sensor-1"
+                  description: Unique device identifier
+                location:
+                  type: string
+                  example: "basement"
+                  description: Installation location
+                pressure:
+                  type: number
+                  format: float
+                  example: 3.2
+                  description: Pressure reading in bar
+      responses:
+        201:
+          description: Data saved successfully
+          content:
+            application/json:
+              example:
+                message: "Data saved successfully"
+                leakDetected: false
+        400:
+          description: Invalid input data
+
+    get:
+      tags: ["Sensors"]
+      summary: Get sensor readings
+      description: Retrieve historical sensor data
+      parameters:
+        - name: limit
+          in: query
+          description: Number of records to return (max 500)
+          schema:
+            type: integer
+            default: 100
+      responses:
+        200:
+          description: List of sensor readings
+          content:
+            application/json:
+              example:
+                count: 2
+                results:
+                  - sensorId: "sensor-1"
+                    pressure: 3.2
+                    isLeaking: false
+                  - sensorId: "sensor-2"
+                    pressure: 4.1
+                    isLeaking: true
+
+  /api/leak-alerts:
+    get:
+      tags: ["Alerts"]
+      summary: Get active leak alerts
+      description: Retrieve all current leak detections
+      responses:
+        200:
+          description: List of active leaks
+          content:
+            application/json:
+              example:
+                alertCount: 1
+                alerts:
+                  - sensorId: "sensor-2"
+                    location: "kitchen"
+                    pressure: 4.1
+                    timestamp: "2023-07-20T12:34:56Z"
+
+components:
+  schemas:
+    LeakData:
+      type: object
+      properties:
+        sensorId:
+          type: string
+        location:
+          type: string
+        pressure:
+          type: number
+        isLeaking:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time

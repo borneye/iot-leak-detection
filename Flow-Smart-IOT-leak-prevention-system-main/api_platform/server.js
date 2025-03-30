@@ -1,3 +1,12 @@
+// Add to very top of server.js
+const originalEmit = process.emit;
+process.emit = function (event, error) {
+  if (event === 'warning' && 
+      ['inflight', 'lodash.get', 'glob'].some(msg => error.message.includes(msg))) {
+    return false;
+  }
+  return originalEmit.apply(process, arguments);
+};
 cat << 'EOF' > server.js
 require('dotenv').config();
 const mongoose = require('mongoose');

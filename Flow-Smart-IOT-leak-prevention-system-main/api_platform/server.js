@@ -7,7 +7,12 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+//const swaggerUi = require('swagger-ui-express');
+//const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./swagger.yaml');
 
+// Add this after your other middleware
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Initialize Express app
 const app = express();
 
